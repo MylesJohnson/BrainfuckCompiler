@@ -18,7 +18,7 @@ Targets x86_64 assembly on linux.
 
 ## Limitations
 
-The compiler uses a fixed-size array of 4000 elements for the cells.
+The compiler uses a fixed-size array of 30,000 elements for the cells. This makes it not technically turing complete.
 
 ## Optimizations
 

@@ -23,7 +23,7 @@ const char * ASM_CLOSE =  "\tcmpb $0, (%%edi)\n"
 						  ".LE%u:\n";
 
 
-const char * ASM_HEADER = "\t.comm tape,4000\n"
+const char * ASM_HEADER = "\t.comm tape,30000\n"
 						  "\n"
 						  "\t.globl main\n"
 						  "\t.type main, @function\n"
