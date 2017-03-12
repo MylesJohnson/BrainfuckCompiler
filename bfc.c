@@ -37,9 +37,9 @@ char * preprocess(char * inputCode)
 char * compile(char * inputCode)
 {
 	long i = 0;
-	char * stack = calloc(255, sizeof(char));
-	char top, loop = 0;
-	char * output = calloc(4096, sizeof(char));
+	uint * stack = calloc(255, sizeof(char));
+	uint top, loop = 0;
+	char * output = calloc(9999999, sizeof(char));
 
 	while (inputCode[i]) {
 		switch (inputCode[i])
