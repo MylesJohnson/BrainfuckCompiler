@@ -7,7 +7,7 @@ A [brainfuck](http://esolangs.org/wiki/Brainfuck) compiler written in C.
 You can use it to compile to assembly. This can then be assembled using `gcc`, and executed directly.
 
 	$ make
-    $ ./bfc examples/hello.b > hello.s
+    $ ./bfc examples/hello.b hello.s
     $ gcc -o hello hello.s
     $ ./hello
     Hello World!
