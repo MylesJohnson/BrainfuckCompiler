@@ -1,33 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "bfc.h"
-
-op_t strToOP(char op)
-{
-	switch (op)
-	{
-		case '+':
-			return PLUS;
-		case '-':
-			return MINUS;
-		case '>':
-			return GTR;
-		case '<':
-			return LESS;
-		case '.':
-			return DOT;
-		case ',':
-			return COMMA;
-		case '[':
-			return OPEN;
-		case ']':
-			return CLOSE;
-		default:
-			return OTHER;
-	}
-}
 
 operationNode * readFile(const char* filename)
 {
@@ -51,43 +27,131 @@ operationNode * readFile(const char* filename)
 		exit(1);
 	}
 
-	head = malloc(sizeof(operationNode));
-	operationNode * cur = head;
+	operationNode * cur = NULL;
 	while (input[++i]) {
-		if(strToOP(input[i]) == OTHER)
+		if(!strchr("+-<>.,[]", input[i]))
 			continue;
 
-		cur->next = malloc(sizeof(operationNode));
-		operationNode * temp = cur;
-
-		cur = cur->next;
+		operationNode * temp = NULL;
+		if(cur == NULL)
+		{
+			cur = head = malloc(sizeof(operationNode));
+			head = cur;
+		} else {
+			cur->next = malloc(sizeof(operationNode));
+			temp = cur;
+			cur = cur->next;
+		}
+		
 		cur->next = NULL;
 		cur->prev = temp;
-		cur->operation = strToOP(input[i]);
-		cur->value = 1;
+
+		switch (input[i])
+		{
+			case '+':
+				cur->operation = INCREMENT;
+				cur->value = 1;
+				break;
+			case '-':
+				cur->operation = INCREMENT;
+				cur->value = -1;
+				break;
+			case '>':
+				cur->operation = POINTER_INCREMENT;
+				cur->value = 1;
+				break;
+			case '<':
+				cur->operation = POINTER_INCREMENT;
+				cur->value = -1;
+				break;
+			case '.':
+				cur->operation = WRITE;
+				cur->value = -1;
+				break;
+			case ',':
+				cur->operation = READ;
+				cur->value = -1;
+				break;
+			case '[':
+				cur->operation = OPEN;
+				cur->value = -1;
+				break;
+			case ']':
+				cur->operation = CLOSE;
+				cur->value = -1;
+				break;
+		}
 	}
 
 	free(input);
-	return head->next;
+	return head;
 }
 
 operationNode * preprocess(operationNode * input)
 {
+	operationNode * head = input;
 	operationNode * cur = input;
 	while(cur->next)
 	{
-		if(cur->operation == cur->next->operation && cur->operation < DOT)
+		if(cur->value == 0)
 		{
-			//This node and the next node can be combind
-			cur->value++;
+			//If it isn't going to do anything, why does it exist.
+			if (cur == head)
+				head = head->next;
+			else
+			{
+				if(cur->next)
+					cur->next->prev = cur->prev;
+				if(cur->prev)
+					cur->prev->next = cur->next;
+			}
+
+			operationNode * temp = cur;
+			cur = cur->prev;
+			free(temp);
+			continue;
+		}
+		if(cur->operation == cur->next->operation && cur->operation == READ)
+		{
+			//No point in doing multiple reads on the same pointer location.
 			operationNode * temp = cur->next;
 			cur->next=cur->next->next;
+			cur->next->prev = cur;
 			free(temp);
 			continue; // Don't move onto the next yet, we aren't ready.
 		}
+		if(cur->operation == INCREMENT && cur->next->operation == READ)
+		{
+			//No point in incrementing if we're just going to read after.
+			if (cur == head)
+				head = head->next;
+			else
+			{
+				if(cur->next)
+					cur->next->prev = cur->prev;
+				if(cur->prev)
+					cur->prev->next = cur->next;
+			}
+
+			operationNode * temp = cur;
+			cur = cur->next;
+			free(temp);
+			continue;
+		}
+		if(cur->operation == cur->next->operation && cur->operation < READ)
+		{
+			//This node and the next node can be combind
+			cur->value += cur->next->value;
+			operationNode * temp = cur->next;
+			cur->next=cur->next->next;
+			cur->next->prev = cur;
+			free(temp);
+			continue; // Don't move onto the next yet, we aren't ready.
+		}
+
 		cur = cur->next;
 	}
-	return input;
+	return head;
 }
 
 void writeFile(const char * filename, operationNode * assembly)
@@ -102,29 +166,24 @@ void writeFile(const char * filename, operationNode * assembly)
 	fputs(ASM_HEADER, outputFP);
 
 	uint * stack = calloc(255, sizeof(char));
-	uint top, loop = 0;
+	uint top = 0;
+	uint loop = 0;
 	operationNode * cur = assembly;
 	while(cur)
 	{
 		switch (cur->operation)
 		{
-			case PLUS:
-				fprintf(outputFP, ASM_PLUS, cur->value);
+			case INCREMENT:
+				fprintf(outputFP, ASM_INCREMENT, cur->value);
 				break;
-			case MINUS:
-				fprintf(outputFP, ASM_MINUS, cur->value);
+			case POINTER_INCREMENT:
+				fprintf(outputFP, ASM_POINTER_INCREMENT, cur->value);
 				break;
-			case GTR:
-				fprintf(outputFP, ASM_GTR, cur->value);
+			case WRITE:
+				fputs(ASM_WRITE, outputFP);
 				break;
-			case LESS:
-				fprintf(outputFP, ASM_LESS, cur->value);
-				break;
-			case DOT:
-				fputs(ASM_DOT, outputFP);
-				break;
-			case COMMA:
-				fputs(ASM_COMMA, outputFP);
+			case READ:
+				fputs(ASM_READ, outputFP);
 				break;
 			case OPEN: ; //Because C is stupid and you can't declare vars after a label...
 				stack[top++] = ++loop;
@@ -139,6 +198,7 @@ void writeFile(const char * filename, operationNode * assembly)
 
 	fputs(ASM_FOOTER, outputFP);
 	fclose(outputFP);
+	free(stack);
 }
 
 int main(int argc, char const *argv[])

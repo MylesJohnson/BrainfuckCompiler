@@ -28,4 +28,48 @@ This is not (yet) an optimizing compiler.
 
 #### Combining Instructions
 
-We combine successive increments/decrements for both pointer location and value.
+We combine successive increments/decrements:
+
+```
+    Compile             Combine
++-++  =>   Increment  1   =>   Increment 2
+           Increment -1
+           Increment  1
+           Increment  1
+```
+
+If increments/decrements cancel out, we remove them entirely.
+
+```
+   Compile             Combine
++-   =>   Increment  1    =>   # nothing!
+          Increment -1
+```
+
+We combine pointer increments:
+
+```
+    Compile                   Combine
+><>>  =>   PointerIncrement  1   =>   PointerIncrement 2
+           PointerIncrement -1
+           PointerIncrement  1
+           PointerIncrement  1
+```
+
+We remove increments if there's a read immediately after:
+
+```
+            Combine
+Increment 1   =>   Read
+Read
+
+```
+
+We remove successive reads:
+
+```
+     Combine
+Read   =>   Read
+Read
+
+```

@@ -2,12 +2,10 @@
 #define bfc_header
 
 typedef enum {
-    PLUS,
-    MINUS,
-    GTR,
-    LESS,
-    DOT,
-    COMMA,
+    INCREMENT,
+    POINTER_INCREMENT,
+    READ,
+    WRITE,
     OPEN,
     CLOSE,
     OTHER
@@ -15,22 +13,20 @@ typedef enum {
 
 typedef struct node {
     op_t operation;
-    uint value;
+    int value;
     struct node * next;
     struct node * prev;
 } operationNode;
 
 
-const char * ASM_PLUS = "\taddb $%u, (%%edi)\n";
-const char * ASM_MINUS = "\tsubb $%u, (%%edi)\n";
-const char * ASM_GTR = "\tadd $%u, %%edi\n";
-const char * ASM_LESS = "\tsub $%u, %%edi\n";
-const char * ASM_DOT = "\tmovl $4, %eax\n"
+const char * ASM_INCREMENT = "\taddb $%i, (%%edi)\n";
+const char * ASM_POINTER_INCREMENT = "\tadd $%i, %%edi\n";
+const char * ASM_WRITE = "\tmovl $4, %eax\n"
             		   "\tmovl $1, %ebx\n"
             		   "\tmovl %edi, %ecx\n"
             		   "\tmovl $1, %edx\n"
             		   "\tint $0x80\n";
-const char * ASM_COMMA = "\tmovl $3, %eax\n"
+const char * ASM_READ = "\tmovl $3, %eax\n"
 						 "\tmovl $0, %ebx\n"
 						 "\tmovl %edi, %ecx\n"
 						 "\tmovl $1, %edx\n"
