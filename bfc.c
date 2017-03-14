@@ -1,14 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <string.h>
 
 #include "bfc.h"
 
-char * readFile(const char* filename)
+op_t strToOP(char op)
+{
+	switch (op)
+	{
+		case '+':
+			return PLUS;
+		case '-':
+			return MINUS;
+		case '>':
+			return GTR;
+		case '<':
+			return LESS;
+		case '.':
+			return DOT;
+		case ',':
+			return COMMA;
+		case '[':
+			return OPEN;
+		case ']':
+			return CLOSE;
+		default:
+			return OTHER;
+	}
+}
+
+operationNode * readFile(const char* filename)
 {
 	FILE * inputFP = fopen(filename, "r");
 	char * input;
+	long i = -1;
+	operationNode * head;
 
 	if (inputFP) 
 	{
@@ -25,65 +51,33 @@ char * readFile(const char* filename)
 		exit(1);
 	}
 
+	head = malloc(sizeof(operationNode));
+	operationNode * cur = head;
+	while (input[++i]) {
+		if(strToOP(input[i]) == OTHER)
+			continue;
+
+		cur->next = malloc(sizeof(operationNode));
+		operationNode * temp = cur;
+
+		cur = cur->next;
+		cur->next = NULL;
+		cur->prev = temp;
+		cur->operation = strToOP(input[i]);
+		cur->value = 1;
+	}
+
+	free(input);
+	return head->next;
+}
+
+operationNode * preprocess(operationNode * input)
+{
+	// Currently does no preprocessing 
 	return input;
 }
 
-char * preprocess(char * inputCode)
-{
-	// Currently does no preprocessing 
-	return inputCode;
-}
-
-char * compile(char * inputCode)
-{
-	long i = 0;
-	uint * stack = calloc(255, sizeof(char));
-	uint top, loop = 0;
-	char * output = calloc(9999999, sizeof(char));
-
-	while (inputCode[i]) {
-		switch (inputCode[i])
-		{
-			case '+':
-				strcat(output, ASM_PLUS);
-				break;
-			case '-':
-				strcat(output, ASM_MINUS);
-				break;
-			case '>':
-				strcat(output, ASM_GTR);
-				break;
-			case '<':
-				strcat(output, ASM_LESS);
-				break;
-			case '.':
-				strcat(output, ASM_DOT);
-				break;
-			case ',':
-				strcat(output, ASM_COMMA);
-				break;
-			case '[': ; //Because C is stupid and you can't declare vars after a label...
-				char * tmp = calloc(512, sizeof(char));
-				stack[top++] = ++loop;
-				sprintf(tmp, ASM_OPEN, loop, loop);
-				strcat(output, tmp);
-				free(tmp);
-				break;
-			case ']': ; //Because C is stupid and you can't declare vars after a label...
-				char * tmp2 = calloc(512, sizeof(char));
-				sprintf(tmp2, ASM_CLOSE, stack[--top], stack[top - 1]);
-				strcat(output, tmp2);
-				free(tmp2);
-				break;
-			default:
-				break;
-		}
-		++i;
-	}
-	return output;
-}
-
-void writeFile(const char * filename, char * assembly)
+void writeFile(const char * filename, operationNode * assembly)
 {
 	FILE *outputFP = fopen(filename, "w");
 	if (outputFP == NULL)
@@ -91,8 +85,52 @@ void writeFile(const char * filename, char * assembly)
 		printf("Failed to open output file");
 		exit(1);
 	}
-	
-	fprintf(outputFP, "%s%s%s", ASM_HEADER, assembly, ASM_FOOTER);
+
+	fputs(ASM_HEADER, outputFP);
+
+	uint * stack = calloc(255, sizeof(char));
+	uint top, loop = 0;
+	operationNode * cur = assembly;
+	while(cur)
+	{
+		switch (cur->operation)
+		{
+			case PLUS:
+				fputs(ASM_PLUS, outputFP);
+				break;
+			case MINUS:
+				fputs(ASM_MINUS, outputFP);
+				break;
+			case GTR:
+				fputs(ASM_GTR, outputFP);
+				break;
+			case LESS:
+				fputs(ASM_LESS, outputFP);
+				break;
+			case DOT:
+				fputs(ASM_DOT, outputFP);
+				break;
+			case COMMA:
+				fputs(ASM_COMMA, outputFP);
+				break;
+			case OPEN: ; //Because C is stupid and you can't declare vars after a label...
+				char * tmp = calloc(40, sizeof(char));
+				stack[top++] = ++loop;
+				sprintf(tmp, ASM_OPEN, loop, loop);
+				fputs(tmp, outputFP);
+				free(tmp);
+				break;
+			case CLOSE: ; //Because C is stupid and you can't declare vars after a label...
+				char * tmp2 = calloc(40, sizeof(char));
+				sprintf(tmp2, ASM_CLOSE, stack[--top], stack[top - 1]);
+				fputs(tmp, outputFP);
+				free(tmp2);
+				break;
+		}
+		cur = cur->next;
+	}
+
+	fputs(ASM_FOOTER, outputFP);
 	fclose(outputFP);
 }
 
@@ -104,17 +142,16 @@ int main(int argc, char const *argv[])
 		exit(1);
 	}
 
-	char * input = preprocess(readFile(argv[1]));
-	char * output;
-
+	operationNode * input = readFile(argv[1]);
+	operationNode * output;
 	if (input)
-		output = compile(input);
+		output = preprocess(input);
 	else {
 		perror("File was empty");
 		exit(1);
 	}
 	
-	if (output != "")
+	if (output)
 		writeFile(argv[2], output);
 	else
 		fprintf(stderr, "No output generated\n");

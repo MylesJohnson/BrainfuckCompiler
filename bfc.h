@@ -1,6 +1,26 @@
 #ifndef bfc_header
 #define bfc_header
 
+typedef enum {
+    PLUS,
+    MINUS,
+    GTR,
+    LESS,
+    DOT,
+    COMMA,
+    OPEN,
+    CLOSE,
+    OTHER
+} op_t;
+
+typedef struct node {
+    op_t operation;
+    uint value;
+    struct node * next;
+    struct node * prev;
+} operationNode;
+
+
 const char * ASM_PLUS = "\taddb $1, (%edi)\n";
 const char * ASM_MINUS = "\tsubb $1, (%edi)\n";
 const char * ASM_GTR = "\tadd $1, %edi\n";
