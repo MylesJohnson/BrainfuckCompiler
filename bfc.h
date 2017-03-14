@@ -21,10 +21,10 @@ typedef struct node {
 } operationNode;
 
 
-const char * ASM_PLUS = "\taddb $1, (%edi)\n";
-const char * ASM_MINUS = "\tsubb $1, (%edi)\n";
-const char * ASM_GTR = "\tadd $1, %edi\n";
-const char * ASM_LESS = "\tsub $1, %edi\n";
+const char * ASM_PLUS = "\taddb $%u, (%%edi)\n";
+const char * ASM_MINUS = "\tsubb $%u, (%%edi)\n";
+const char * ASM_GTR = "\tadd $%u, %%edi\n";
+const char * ASM_LESS = "\tsub $%u, %%edi\n";
 const char * ASM_DOT = "\tmovl $4, %eax\n"
             		   "\tmovl $1, %ebx\n"
             		   "\tmovl %edi, %ecx\n"

@@ -73,7 +73,20 @@ operationNode * readFile(const char* filename)
 
 operationNode * preprocess(operationNode * input)
 {
-	// Currently does no preprocessing 
+	operationNode * cur = input;
+	while(cur->next)
+	{
+		if(cur->operation == cur->next->operation && cur->operation < DOT)
+		{
+			//This node and the next node can be combind
+			cur->value++;
+			operationNode * temp = cur->next;
+			cur->next=cur->next->next;
+			free(temp);
+			continue; // Don't move onto the next yet, we aren't ready.
+		}
+		cur = cur->next;
+	}
 	return input;
 }
 
@@ -96,16 +109,16 @@ void writeFile(const char * filename, operationNode * assembly)
 		switch (cur->operation)
 		{
 			case PLUS:
-				fputs(ASM_PLUS, outputFP);
+				fprintf(outputFP, ASM_PLUS, cur->value);
 				break;
 			case MINUS:
-				fputs(ASM_MINUS, outputFP);
+				fprintf(outputFP, ASM_MINUS, cur->value);
 				break;
 			case GTR:
-				fputs(ASM_GTR, outputFP);
+				fprintf(outputFP, ASM_GTR, cur->value);
 				break;
 			case LESS:
-				fputs(ASM_LESS, outputFP);
+				fprintf(outputFP, ASM_LESS, cur->value);
 				break;
 			case DOT:
 				fputs(ASM_DOT, outputFP);
@@ -139,6 +152,7 @@ int main(int argc, char const *argv[])
 	operationNode * input = readFile(argv[1]);
 	operationNode * output;
 	if (input)
+		//output = input;
 		output = preprocess(input);
 	else {
 		perror("File was empty");
