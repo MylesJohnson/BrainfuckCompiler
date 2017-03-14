@@ -114,17 +114,11 @@ void writeFile(const char * filename, operationNode * assembly)
 				fputs(ASM_COMMA, outputFP);
 				break;
 			case OPEN: ; //Because C is stupid and you can't declare vars after a label...
-				char * tmp = calloc(40, sizeof(char));
 				stack[top++] = ++loop;
-				sprintf(tmp, ASM_OPEN, loop, loop);
-				fputs(tmp, outputFP);
-				free(tmp);
+				fprintf(outputFP, ASM_OPEN, loop, loop);
 				break;
 			case CLOSE: ; //Because C is stupid and you can't declare vars after a label...
-				char * tmp2 = calloc(40, sizeof(char));
-				sprintf(tmp2, ASM_CLOSE, stack[--top], stack[top - 1]);
-				fputs(tmp, outputFP);
-				free(tmp2);
+				fprintf(outputFP, ASM_CLOSE, stack[--top], stack[top - 1]);
 				break;
 		}
 		cur = cur->next;
