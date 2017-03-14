@@ -22,8 +22,6 @@ The compiler uses a fixed-size array of 30,000 elements for the cells. This make
 
 ## Optimizations
 
-This is not (yet) an optimizing compiler.
-
 ### Peephole optimisations
 
 #### Combining Instructions
