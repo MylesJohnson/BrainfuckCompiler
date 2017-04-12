@@ -159,7 +159,7 @@ void writeFile(const char * filename, operationNode * assembly)
 	FILE *outputFP = fopen(filename, "w");
 	if (outputFP == NULL)
 	{
-		printf("Failed to open output file");
+		perror("Failed to open output file");
 		exit(1);
 	}
 
@@ -190,10 +190,12 @@ void writeFile(const char * filename, operationNode * assembly)
 				fprintf(outputFP, ASM_OPEN, loop, loop);
 				break;
 			case CLOSE: ; //Because C is stupid and you can't declare vars after a label...
-				fprintf(outputFP, ASM_CLOSE, stack[top - 1], stack[top--]);
+				fprintf(outputFP, ASM_CLOSE, stack[top], stack[--top]);
 				break;
 		}
+		operationNode * tmp = cur;
 		cur = cur->next;
+		free(tmp);
 	}
 
 	fputs(ASM_FOOTER, outputFP);
