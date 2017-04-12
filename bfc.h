@@ -2,30 +2,30 @@
 #define bfc_header
 
 typedef enum {
-    INCREMENT,
-    POINTER_INCREMENT,
-    READ,
-    WRITE,
-    OPEN,
-    CLOSE,
-    OTHER
+	INCREMENT,
+	POINTER_INCREMENT,
+	READ,
+	WRITE,
+	OPEN,
+	CLOSE,
+	OTHER
 } op_t;
 
 typedef struct node {
-    op_t operation;
-    int value;
-    struct node * next;
-    struct node * prev;
+	op_t operation;
+	int value;
+	struct node * next;
+	struct node * prev;
 } operationNode;
 
 
 const char * ASM_INCREMENT = "\taddb $%i, (%%edi)\n";
 const char * ASM_POINTER_INCREMENT = "\tadd $%i, %%edi\n";
 const char * ASM_WRITE = "\tmovl $4, %eax\n"
-            		   "\tmovl $1, %ebx\n"
-            		   "\tmovl %edi, %ecx\n"
-            		   "\tmovl $1, %edx\n"
-            		   "\tint $0x80\n";
+						 "\tmovl $1, %ebx\n"
+						 "\tmovl %edi, %ecx\n"
+						 "\tmovl $1, %edx\n"
+						"\tint $0x80\n";
 const char * ASM_READ = "\tmovl $3, %eax\n"
 						 "\tmovl $0, %ebx\n"
 						 "\tmovl %edi, %ecx\n"
