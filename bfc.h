@@ -10,7 +10,7 @@ typedef struct {
 static char doc[] = "BFC - A brainfuck compiler written in C. Goes directly to ASM";
 static char args_doc[] = "infile";
 static struct argp_option options[] = {
-	{"output", 'o', "FILE", 0, "Output to FILE instead of a.out" },
+	{"output", 'o', "FILE", 0, "Output to FILE instead of default(infile.s)" },
 	{"disableOptimization", 'O', 0, 0, "Disable optimization"},
 	{ 0 }
 };

@@ -7,7 +7,7 @@ A [brainfuck](http://esolangs.org/wiki/Brainfuck) compiler written in C.
     Usage: bfc [OPTION...] infile
     BFC - A brainfuck compiler written in C. Goes directly to ASM
 
-    -o, --output=FILE          Output to FILE instead of a.out
+    -o, --output=FILE          Output to FILE instead of default(infile.s)
     -O, --disableOptimization  Disable optimization
     -?, --help                 Give this help list
         --usage                Give a short usage message
