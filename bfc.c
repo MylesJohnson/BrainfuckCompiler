@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <libgen.h>
+#include <argp.h>
 
 #include "bfc.h"
 
@@ -203,18 +205,71 @@ void writeFile(const char * filename, operationNode * assembly)
 	free(stack);
 }
 
-int main(int argc, char const *argv[])
+char* remove_extension(char* basename) {
+	char* output;
+
+	if (basename == NULL)
+		return NULL;
+
+	char* lastdot = strrchr(basename, '.');
+
+	if(lastdot == NULL)
+		lastdot = strrchr(basename, '\0');
+
+	// The +2 is to allow the '.s' be added later
+	if ((output = malloc(lastdot - basename + 2)) == NULL)
+		return NULL;
+
+	strncpy(output, basename, lastdot - basename);
+	return output;
+}
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
-	if (argc != 3)
+	arguments *args = state->input;
+
+	switch (key)
 	{
-		fprintf(stderr, "Invalid number of args\n");
-		exit(1);
+		case 'o':
+			args->output_file = arg;
+			break;
+
+		case ARGP_KEY_ARG:
+			if (state->arg_num >= 1)
+				argp_usage (state);
+			args->input_file = arg;
+			break;
+
+		case ARGP_KEY_END:
+			if (state->arg_num < 1)
+				argp_usage (state);
+			break;
+
+		default:
+			return ARGP_ERR_UNKNOWN;
 	}
 
-	operationNode * input = readFile(argv[1]);
+	return 0;
+}
+
+/* Our argp parser. */
+static struct argp argp = { options, parse_opt, args_doc, doc };
+
+int main(int argc, char **argv)
+{
+	arguments args;
+	args.output_file = NULL;
+
+	argp_parse(&argp, argc, argv, 0, 0, &args);
+	if(!args.output_file)
+	{
+		args.output_file = remove_extension(basename(args.input_file));
+		strncat(args.output_file, ".s", 2);
+	}
+
+	operationNode * input = readFile(args.input_file);
 	operationNode * output;
 	if (input)
-		//output = input;
 		output = preprocess(input);
 	else {
 		perror("File was empty");
@@ -222,7 +277,7 @@ int main(int argc, char const *argv[])
 	}
 	
 	if (output)
-		writeFile(argv[2], output);
+		writeFile(args.output_file, output);
 	else
 		fprintf(stderr, "No output generated\n");
 }
