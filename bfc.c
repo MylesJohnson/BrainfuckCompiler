@@ -217,7 +217,7 @@ char* remove_extension(char* basename) {
 		lastdot = strrchr(basename, '\0');
 
 	// The +2 is to allow the '.s' be added later
-	if ((output = malloc(lastdot - basename + 2)) == NULL)
+	if ((output = malloc(lastdot - basename + 3)) == NULL)
 		return NULL;
 
 	strncpy(output, basename, lastdot - basename);
@@ -280,4 +280,5 @@ int main(int argc, char **argv)
 		writeFile(args.output_file, output);
 	else
 		fprintf(stderr, "No output generated\n");
+	free(args.output_file);
 }
