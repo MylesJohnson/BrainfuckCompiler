@@ -36,10 +36,8 @@ operationNode * readFile(const char* filename)
 
 		operationNode * temp = NULL;
 		if(cur == NULL)
-		{
 			cur = head = malloc(sizeof(operationNode));
-			head = cur;
-		} else {
+		else {
 			cur->next = malloc(sizeof(operationNode));
 			temp = cur;
 			cur = cur->next;
@@ -234,6 +232,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 			args->output_file = arg;
 			break;
 
+		case 'O':
+			args->optimize = 0;
+			break;
+
 		case ARGP_KEY_ARG:
 			if (state->arg_num >= 1)
 				argp_usage (state);
@@ -259,6 +261,7 @@ int main(int argc, char **argv)
 {
 	arguments args;
 	args.output_file = NULL;
+	args.optimize = 1;
 
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 	if(!args.output_file)
@@ -269,9 +272,12 @@ int main(int argc, char **argv)
 
 	operationNode * input = readFile(args.input_file);
 	operationNode * output;
-	if (input)
-		output = preprocess(input);
-	else {
+	if (input) {
+		if(args.optimize)
+			output = preprocess(input);
+		else
+			output = input;
+	} else {
 		perror("File was empty");
 		exit(1);
 	}
@@ -280,5 +286,4 @@ int main(int argc, char **argv)
 		writeFile(args.output_file, output);
 	else
 		fprintf(stderr, "No output generated\n");
-	free(args.output_file);
 }

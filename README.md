@@ -3,14 +3,22 @@
 A [brainfuck](http://esolangs.org/wiki/Brainfuck) compiler written in C.
 
 ## Usage
+    $ ./bfc --help
+    Usage: bfc [OPTION...] infile
+    BFC - A brainfuck compiler written in C. Goes directly to ASM
+
+    -o, --output=FILE          Output to FILE instead of a.out
+    -O, --disableOptimization  Disable optimization
+    -?, --help                 Give this help list
+        --usage                Give a short usage message
 
 You can use it to compile to assembly. This can then be assembled using `gcc`, and executed directly.
 
-  $ make
-  $ ./bfc -o hello.s examples/hello.b 
-  $ gcc -o hello hello.s
-  $ ./hello
-  Hello World!
+    $ make
+    $ ./bfc -o hello.s examples/hello.b 
+    $ gcc -o hello hello.s
+    $ ./hello
+    Hello World!
 
 ## Platforms
 
