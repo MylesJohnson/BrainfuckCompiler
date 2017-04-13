@@ -190,7 +190,8 @@ void writeFile(const char * filename, operationNode * assembly)
 				fprintf(outputFP, ASM_OPEN, loop, loop);
 				break;
 			case CLOSE: ; //Because C is stupid and you can't declare vars after a label...
-				fprintf(outputFP, ASM_CLOSE, stack[top], stack[--top]);
+				--top;
+				fprintf(outputFP, ASM_CLOSE, stack[top], stack[top]);
 				break;
 		}
 		operationNode * tmp = cur;
