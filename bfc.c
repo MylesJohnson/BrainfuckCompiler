@@ -6,13 +6,14 @@
 #include <argp.h>
 
 #include "bfc.h"
+#include "linkedlist.c"
 
 operationNode * readFile(const char* filename)
 {
 	FILE * inputFP = fopen(filename, "r");
 	char * input;
 	long i = -1;
-	operationNode * head;
+	operationNode * head = NULL;
 
 	if (inputFP) 
 	{
@@ -29,22 +30,12 @@ operationNode * readFile(const char* filename)
 		exit(1);
 	}
 
-	operationNode * cur = NULL;
+	operationNode * prev = NULL;
 	while (input[++i]) {
 		if(!strchr("+-<>.,[]", input[i]))
 			continue;
-
-		operationNode * temp = NULL;
-		if(cur == NULL)
-			cur = head = malloc(sizeof(operationNode));
-		else {
-			cur->next = malloc(sizeof(operationNode));
-			temp = cur;
-			cur = cur->next;
-		}
 		
-		cur->next = NULL;
-		cur->prev = temp;
+		operationNode * cur = malloc(sizeof(operationNode));
 
 		switch (input[i])
 		{
@@ -81,6 +72,11 @@ operationNode * readFile(const char* filename)
 				cur->value = -1;
 				break;
 		}
+
+		if(head == NULL)
+			head = cur;
+		list_append(prev, cur);
+		prev = cur;
 	}
 
 	free(input);
@@ -96,56 +92,29 @@ operationNode * preprocess(operationNode * input)
 		if(cur->value == 0)
 		{
 			//If it isn't going to do anything, why does it exist.
-			if (cur == head)
-				head = head->next;
-			else
-			{
-				if(cur->next)
-					cur->next->prev = cur->prev;
-				if(cur->prev)
-					cur->prev->next = cur->next;
-			}
-
-			operationNode * temp = cur;
-			cur = cur->prev;
-			free(temp);
+			operationNode * temp = cur->next;
+			list_remove(cur);
+			cur = temp;
 			continue;
 		}
 		if(cur->operation == cur->next->operation && cur->operation == READ)
 		{
 			//No point in doing multiple reads on the same pointer location.
-			operationNode * temp = cur->next;
-			cur->next=cur->next->next;
-			cur->next->prev = cur;
-			free(temp);
+			list_remove(cur->next);
 			continue; // Don't move onto the next yet, we aren't ready.
 		}
 		if(cur->operation == INCREMENT && cur->next->operation == READ)
 		{
-			//No point in incrementing if we're just going to read after.
-			if (cur == head)
-				head = head->next;
-			else
-			{
-				if(cur->next)
-					cur->next->prev = cur->prev;
-				if(cur->prev)
-					cur->prev->next = cur->next;
-			}
-
-			operationNode * temp = cur;
-			cur = cur->next;
-			free(temp);
+			operationNode * temp = cur->next;
+			list_remove(cur);
+			cur = temp;
 			continue;
 		}
 		if(cur->operation == cur->next->operation && cur->operation < READ)
 		{
 			//This node and the next node can be combind
 			cur->value += cur->next->value;
-			operationNode * temp = cur->next;
-			cur->next=cur->next->next;
-			cur->next->prev = cur;
-			free(temp);
+			list_remove(cur->next);
 			continue; // Don't move onto the next yet, we aren't ready.
 		}
 
@@ -190,7 +159,7 @@ void writeFile(const char * filename, operationNode * assembly)
 				fprintf(outputFP, ASM_OPEN, loop, loop);
 				break;
 			case CLOSE: ; //Because C is stupid and you can't declare vars after a label...
-				--top;
+				top--;
 				fprintf(outputFP, ASM_CLOSE, stack[top], stack[top]);
 				break;
 		}

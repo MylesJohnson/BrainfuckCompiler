@@ -26,14 +26,6 @@ typedef enum {
 	OTHER
 } op_t;
 
-typedef struct node {
-	op_t operation;
-	int value;
-	struct node * next;
-	struct node * prev;
-} operationNode;
-
-
 const char * ASM_INCREMENT = "\taddb $%i, (%%edi)\n";
 const char * ASM_POINTER_INCREMENT = "\tadd $%i, %%edi\n";
 const char * ASM_WRITE = "\tmovl $4, %eax\n"
