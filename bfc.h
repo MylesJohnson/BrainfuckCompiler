@@ -46,14 +46,16 @@ const char * ASM_CLOSE =  "\tcmpb $0, (%%edi)\n"
 						  ".LE%u:\n";
 
 
-const char * ASM_HEADER = "\t.comm tape,30000\n"
+const char * ASM_HEADER = "\t.comm tape,%u\n"
 						  "\n"
 						  "\t.globl main\n"
 						  "\t.type main, @function\n"
 						  "main:\n"
-						  "\tmovl $tape, %edi\n";
+						  "\tmovl $tape, %%edi\n";
 
 const char * ASM_FOOTER = "\tmovl $0, %eax\n"
 						  "\tret\n";
+
+#define MAX(a,b) ((a) > (b) ? a : b)
 
 #endif

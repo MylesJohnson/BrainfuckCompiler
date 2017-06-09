@@ -4,7 +4,7 @@
 
 void list_append(operationNode* node, operationNode* new)
 {
-	operationNode* tmp;
+	operationNode* tmp = NULL;
 	if(node)
 	{
 		tmp = node->next;

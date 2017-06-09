@@ -85,7 +85,6 @@ operationNode * readFile(const char* filename)
 
 operationNode * preprocess(operationNode * input)
 {
-	operationNode * head = input;
 	operationNode * cur = input;
 	while(cur->next)
 	{
@@ -117,10 +116,32 @@ operationNode * preprocess(operationNode * input)
 			list_remove(cur->next);
 			continue; // Don't move onto the next yet, we aren't ready.
 		}
-
 		cur = cur->next;
 	}
-	return head;
+	return input;
+}
+
+unsigned long calcBounds(operationNode * assembly)
+{
+    unsigned long maxIndex = 0;
+    unsigned long currentIndex = 0;
+
+    operationNode * cur = assembly;
+	while(cur)
+	{
+		switch (cur->operation)
+		{
+			case POINTER_INCREMENT:
+				currentIndex += cur->value;
+				maxIndex = MAX(currentIndex, maxIndex);
+				break;
+			case OPEN:
+			    return 30000; //Eventually I'll figure out how to calculate finite lops
+			    break;
+		}
+		cur = cur->next;
+	}
+    return maxIndex;
 }
 
 void writeFile(const char * filename, operationNode * assembly)
@@ -132,7 +153,7 @@ void writeFile(const char * filename, operationNode * assembly)
 		exit(1);
 	}
 
-	fputs(ASM_HEADER, outputFP);
+	fprintf(outputFP, ASM_HEADER, calcBounds(assembly));
 
 	uint * stack = calloc(255, sizeof(char));
 	uint top = 0;
@@ -184,8 +205,8 @@ char* remove_extension(char* basename) {
 	if(lastdot == NULL)
 		lastdot = strrchr(basename, '\0');
 
-	// The +2 is to allow the '.s' be added later
-	if ((output = malloc(lastdot - basename + 3)) == NULL)
+	// The +3 is to allow the '.s' be added later
+	if ((output = calloc(lastdot - basename + 3, 1)) == NULL)
 		return NULL;
 
 	strncpy(output, basename, lastdot - basename);
@@ -234,11 +255,16 @@ int main(int argc, char **argv)
 	args.optimize = 1;
 
 	argp_parse(&argp, argc, argv, 0, 0, &args);
+	char* output_file;
 	if(!args.output_file)
 	{
-		args.output_file = remove_extension(basename(args.input_file));
-		strncat(args.output_file, ".s", 2);
+		output_file = remove_extension(basename(args.input_file));
+		strncat(output_file, ".s", 2);
+	} else {
+	    output_file = malloc(sizeof(char) * strlen(args.output_file));
+	    strcpy(output_file, args.output_file);
 	}
+	
 
 	operationNode * input = readFile(args.input_file);
 	operationNode * output;
@@ -253,7 +279,9 @@ int main(int argc, char **argv)
 	}
 	
 	if (output)
-		writeFile(args.output_file, output);
+		writeFile(output_file, output);
 	else
 		fprintf(stderr, "No output generated\n");
+		
+	free(output_file);
 }
