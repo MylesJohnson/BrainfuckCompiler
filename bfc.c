@@ -15,7 +15,7 @@ operationNode * readFile(const char* filename)
 	long i = -1;
 	operationNode * head = NULL;
 
-	if (inputFP) 
+	if (inputFP)
 	{
 		fseek(inputFP, 0, SEEK_END);
 		long length = ftell(inputFP);
@@ -27,14 +27,19 @@ operationNode * readFile(const char* filename)
 		fclose(inputFP);
 	} else {
 		perror("Failed to open input file");
-		exit(1);
+		exit(EXIT_FAILURE);
+	}
+
+	if (strstr(input, ".") == NULL) {
+		printf("File never outputs, so there's no reason to run.");
+		exit(EXIT_SUCCESS);
 	}
 
 	operationNode * prev = NULL;
 	while (input[++i]) {
 		if(!strchr("+-<>.,[]", input[i]))
 			continue;
-		
+
 		operationNode * cur = malloc(sizeof(operationNode));
 
 		switch (input[i])
@@ -150,7 +155,7 @@ void writeFile(const char * filename, operationNode * assembly)
 	if (outputFP == NULL)
 	{
 		perror("Failed to open output file");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	fprintf(outputFP, ASM_HEADER, calcBounds(assembly));
@@ -264,7 +269,7 @@ int main(int argc, char **argv)
 	    output_file = malloc(sizeof(char) * strlen(args.output_file));
 	    strcpy(output_file, args.output_file);
 	}
-	
+
 
 	operationNode * input = readFile(args.input_file);
 	operationNode * output;
@@ -275,13 +280,13 @@ int main(int argc, char **argv)
 			output = input;
 	} else {
 		perror("File was empty");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
-	
+
 	if (output)
 		writeFile(output_file, output);
 	else
 		fprintf(stderr, "No output generated\n");
-		
+
 	free(output_file);
 }
